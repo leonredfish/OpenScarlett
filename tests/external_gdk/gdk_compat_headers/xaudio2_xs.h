@@ -146,14 +146,80 @@ struct IXAudio2EngineCallback {
     virtual void XA2_COMPAT_CALL OnCriticalError(HRESULT Error) = 0;
 };
 
+constexpr float XAUDIO2_MAX_FILTER_ONEOVERQ = 1.5f;
+constexpr float XAUDIO2_MAX_FILTER_FREQUENCY = 1.0f;
+
+struct XAUDIO2_EFFECT_DESCRIPTOR {
+    IUnknown* pEffect;
+    BOOL InitialState;
+    uint32_t OutputChannels;
+};
+
+struct XAUDIO2_EFFECT_CHAIN {
+    uint32_t EffectCount;
+    XAUDIO2_EFFECT_DESCRIPTOR* pEffectDescriptors;
+};
+
+enum XAUDIO2_FILTER_TYPE {
+    LowPassFilter = 0,
+    BandPassFilter = 1,
+    HighPassFilter = 2,
+    NotchFilter = 3,
+};
+
+struct XAUDIO2_FILTER_PARAMETERS {
+    XAUDIO2_FILTER_TYPE Type;
+    float Frequency;
+    float OneOverQ;
+};
+
+// IMPORTANT: IXAudio2Voice must declare the complete Microsoft XAudio2 vtable
+// (19 virtual methods) or every IXAudio2SourceVoice call from this guest
+// dispatches into the wrong slot of OpenScarlett's XAudio2_9.dll shim
+// (and of real Windows XAudio2), e.g. Start() -> GetEffectParameters(),
+// SubmitSourceBuffer() -> GetFilterParameters() -> silent mix + bogus HRESULTs.
 struct IXAudio2Voice {
     virtual void XA2_COMPAT_CALL GetVoiceDetails(XAUDIO2_VOICE_DETAILS* pVoiceDetails) = 0;
     virtual HRESULT XA2_COMPAT_CALL SetOutputVoices(const XAUDIO2_VOICE_SENDS* pSendList) = 0;
+    virtual HRESULT XA2_COMPAT_CALL SetEffectChain(const XAUDIO2_EFFECT_CHAIN* pEffectChain) = 0;
+    virtual HRESULT XA2_COMPAT_CALL EnableEffect(
+        uint32_t EffectIndex, uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
+    virtual HRESULT XA2_COMPAT_CALL DisableEffect(
+        uint32_t EffectIndex, uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
+    virtual void XA2_COMPAT_CALL GetEffectState(uint32_t EffectIndex, BOOL* pEnabled) = 0;
+    virtual HRESULT XA2_COMPAT_CALL SetEffectParameters(
+        uint32_t EffectIndex,
+        const void* pParameters,
+        uint32_t ParametersByteSize,
+        uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
+    virtual HRESULT XA2_COMPAT_CALL GetEffectParameters(
+        uint32_t EffectIndex, void* pParameters, uint32_t ParametersByteSize) = 0;
+    virtual HRESULT XA2_COMPAT_CALL SetFilterParameters(
+        const XAUDIO2_FILTER_PARAMETERS* pParameters,
+        uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
+    virtual void XA2_COMPAT_CALL GetFilterParameters(XAUDIO2_FILTER_PARAMETERS* pParameters) = 0;
+    virtual HRESULT XA2_COMPAT_CALL SetOutputFilterParameters(
+        IXAudio2Voice* pDestinationVoice,
+        const XAUDIO2_FILTER_PARAMETERS* pParameters,
+        uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
+    virtual void XA2_COMPAT_CALL GetOutputFilterParameters(
+        IXAudio2Voice* pDestinationVoice, XAUDIO2_FILTER_PARAMETERS* pParameters) = 0;
     virtual HRESULT XA2_COMPAT_CALL SetVolume(float Volume, uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
     virtual void XA2_COMPAT_CALL GetVolume(float* pVolume) = 0;
     virtual HRESULT XA2_COMPAT_CALL SetChannelVolumes(
         uint32_t Channels, const float* pVolumes, uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
     virtual void XA2_COMPAT_CALL GetChannelVolumes(uint32_t Channels, float* pVolumes) = 0;
+    virtual HRESULT XA2_COMPAT_CALL SetOutputMatrix(
+        IXAudio2Voice* pDestinationVoice,
+        uint32_t SourceChannels,
+        uint32_t DestinationChannels,
+        const float* pLevelMatrix,
+        uint32_t OperationSet = XAUDIO2_COMMIT_NOW) = 0;
+    virtual void XA2_COMPAT_CALL GetOutputMatrix(
+        IXAudio2Voice* pDestinationVoice,
+        uint32_t SourceChannels,
+        uint32_t DestinationChannels,
+        float* pLevelMatrix) = 0;
     virtual void XA2_COMPAT_CALL DestroyVoice() = 0;
 };
 
