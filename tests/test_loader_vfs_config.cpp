@@ -780,16 +780,16 @@ void TestPeExceptionTableRegistration() {
 }
 
 // ---------------------------------------------------------------------------
-// Test 6: Data-Driven Per-DLL Routing Table (All 20 Core Shims + Env Overrides)
+// Test 6: Data-Driven Per-DLL Routing Table (All 21 Core Shims + Env Overrides)
 // ---------------------------------------------------------------------------
 void TestDllRoutingTable() {
     using namespace openscarlett;
 
     DllRoutingTable table;
     const auto rules = table.ListRules();
-    OS_REQUIRE(rules.size() == 20);
+    OS_REQUIRE(rules.size() == 21);
 
-    // Verify all 20 core shim DLL names & exact priorities
+    // Verify all 21 core shim DLL names & exact priorities
     const std::vector<std::pair<const char*, int>> expected_shims = {
         {"kernelx.dll", 0},
         {"xgameruntime.dll", 0},
@@ -799,6 +799,7 @@ void TestDllRoutingTable() {
         {"xg_xs.dll", 1},
         {"AcpHal.dll", 1},
         {"xapu.dll", 1},
+        {"chad.dll", 1},
         {"dstorage_xs.dll", 1},
         {"winrt_xs.dll", 1},
         {"xmem.dll", 1},

@@ -536,8 +536,9 @@ DllRoutingTable::DllRoutingTable() {
         bool is_extended;
         bool is_fixed_stub;
     };
-    // 20 core Xbox/GDK shims + 5 diagnostic/media shims (mfplat_xs, advapi32legacy,
-    // KernelTraceControl, hix_xs, xbtp) + 6 Sprint 7 fixed-return stub shims = 31 total.
+    // 21 core Xbox/GDK shims (incl. chad.dll) + 5 diagnostic/media shims (mfplat_xs,
+    // advapi32legacy, KernelTraceControl, hix_xs, xbtp) = 26 ListAllRules(), plus
+    // 6 Sprint 7 fixed-return stub shims = 32 ListCompleteRules() total.
     static constexpr BuiltinShimSpec kBuiltinShims[] = {
         // Priority 0: base shims
         {"kernelx.dll", 0, false, false},

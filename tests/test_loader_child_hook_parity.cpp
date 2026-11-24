@@ -203,10 +203,10 @@ void TestUnifiedDllRouting() {
     OS_REQUIRE(ClassifyImportDll("mfplat.dll") == DllCategory::WindowsNative);
     OS_REQUIRE(ClassifyImportDll("XGamingRuntimeThunks.dll") == DllCategory::GdkRuntime);
 
-    // 1B. Built-in rule counts (20 core + 5 extended = 25 total)
+    // 1B. Built-in rule counts (21 core + 5 extended = 26 total)
     DllRoutingTable table;
-    OS_REQUIRE(table.ListRules().size() == 20u);
-    OS_REQUIRE(table.ListAllRules().size() == 25u);
+    OS_REQUIRE(table.ListRules().size() == 21u);
+    OS_REQUIRE(table.ListAllRules().size() == 26u);
 
     const char* kNewShims[] = {
         "mfplat_xs.dll",
