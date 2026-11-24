@@ -302,7 +302,11 @@ void TestAcpHalAndXApuHardening() {
     RetailXApuShm shm{};
     XAPU_CONNECTION_HANDLE hconn = nullptr;
     OS_REQUIRE(fn_xapu_connect(&ok_params, &shm, &hconn) == XAPU_S_OK);
-    OS_REQUIRE(shm.baseAddress != nullptr && shm.sizeBytes >= 4u * 0x10000u && hconn != nullptr);
+    // XApuConnect honors the caller's requested sharedMemoryBytes (rounded up to 4 KiB,
+    // minimum 64 KiB) instead of inflating to streamCount * 64 KiB.
+    OS_REQUIRE(shm.baseAddress != nullptr &&
+               shm.sizeBytes >= static_cast<uint64_t>(ok_params.sharedMemoryBytes) &&
+               shm.sizeBytes >= 0x10000ull && hconn != nullptr);
     OS_REQUIRE(fn_xapu_disc(hconn) == XAPU_S_OK);
 
     ::FreeLibrary(xapu_mod);

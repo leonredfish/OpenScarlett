@@ -1101,7 +1101,11 @@ void TestAudio100() {
         // Valid 3-arg connect -> enqueue/dequeue -> disconnect -> double-disconnect rejected cleanly
         RetailXApuParams good_params{1u, 2u, 2u, 65536u, 0u, 0u};
         OS_REQUIRE(XApuConnect(&good_params, &shm, &h) == XAPU_S_OK);
-        OS_REQUIRE(h != nullptr && shm.base != nullptr && shm.size >= 131072ull);
+        // XApuConnect honors the requested sharedMemoryBytes (min 64 KiB) instead of
+        // inflating to streamCount * 64 KiB.
+        OS_REQUIRE(h != nullptr && shm.base != nullptr &&
+                   shm.size >= static_cast<uint64_t>(good_params.sharedMemoryBytes) &&
+                   shm.size >= 0x10000ull);
         uint32_t dummy_cmd[4] = {1u, 7u, 0u, 0u};
         OS_REQUIRE(XApuEnqueueCommand(h, dummy_cmd, 0u) == XAPU_S_OK);
         uint8_t res_buf[0x50]{};
