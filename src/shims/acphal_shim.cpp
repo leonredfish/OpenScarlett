@@ -555,6 +555,7 @@ public:
             static_cast<uint64_t>(non_cached_.bytes_allocated) + non_cached_.bytes_lost;
         cached_.capacity = static_cast<uint32_t>(std::max<uint64_t>(cached_bytes, cached_used));
         non_cached_.capacity = static_cast<uint32_t>(std::max<uint64_t>(non_cached_bytes, non_cached_used));
+        capacity_explicit_ = true;
         initialized_ = true;
         return ACPHAL_S_OK;
     }
@@ -623,7 +624,10 @@ public:
                 } else {
                     const uint64_t needed = cur_used + span64;
                     const uint32_t max_cap = use_non_cached ? kNonCachedApuSpaceSize : kCachedApuSpaceSize;
-                    if (needed <= max_cap) {
+                    // Auto-expansion is only allowed for the default heap. Capacities set
+                    // explicitly by ApuCreateHeap are a hard cap, exactly like real Xbox
+                    // AcpHal, so callers can force (and observe) OOM + rollback.
+                    if (!capacity_explicit_ && needed <= max_cap) {
                         pool_ptr->capacity = static_cast<uint32_t>(needed);
                     } else {
                         return ACPHAL_E_OUTOFMEMORY;
@@ -924,6 +928,9 @@ private:
 
     std::mutex mutex_;
     bool initialized_ = false;
+    // True once a guest called ApuCreateHeap with explicit capacities: those become a
+    // hard retail cap, so Alloc() must NOT auto-expand them (see the retail OOM path).
+    bool capacity_explicit_ = false;
     ApuHeapPool cached_{};
     ApuHeapPool non_cached_{};
     std::map<uintptr_t, ApuAllocRecord> by_va_;
